@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -eo pipefail
+
+ln -s $(pwd)/git-open-web-ui /usr/local/bin/git-open-web-ui
