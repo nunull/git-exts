@@ -7,6 +7,7 @@ case "$1" in
     open_pipeline=1
     shift
     ;;
+
   --help|-h)
     echo "Usage: $0 [options] [<remote>]" 1>&2
     echo 1>&2
@@ -26,9 +27,9 @@ remote_url=$(git remote get-url "$remote")
 cleaned_url=$(echo "$remote_url" | sed 's/git@//; s/:/\//; s/.git$//')
 url="https://$cleaned_url"
 
-if [ "$open_pipeline" ]; then
-    hash=$(git rev-parse HEAD)
-    url="$url/commit/$hash/pipelines"
+if [[ "$open_pipeline" ]]; then
+  hash=$(git rev-parse HEAD)
+  url="$url/commit/$hash/pipelines"
 fi
 
 open "$url"
