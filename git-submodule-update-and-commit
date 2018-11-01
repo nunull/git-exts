@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -eo pipefail
+
+path="$1"
+branch="$2"
+
+if [[ -z "$path" ]]; then
+  echo "git-submodule-update-and-commit <path> [<branch>]" 1>&2
+  exit 1
+fi
+
+if [[ -z "$branch" ]]; then
+  echo "No branch given. Obtaining branch from superproject..." 1>&2
+  branch=$(git symbolic-ref --short HEAD)
+fi
+
+
+(
+  cd "$path"
+
+  if [ ! -z "$(git status --porcelain)" ]; then
+    echo "Error: Working directory in $path is not clean." 1>&2
+    exit 1
+  fi
+
+  echo "Checking out $branch in $path..." 1>&2
+  git checkout "$branch"
+
+  echo "Pulling..." 1>&2
+  git pull
+)
+
+echo "Commiting updated submodule..."
+git add "$path"
+git commit -m "Update $path" -m "[skip ci]"

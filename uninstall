@@ -2,5 +2,9 @@
 
 set -eo pipefail
 
-rm /usr/local/bin/git-open-web-ui
 
+scripts=(git-open-web-ui git-submodule-update-and-commit)
+
+for script in "${scripts[@]}"; do
+  rm "/usr/local/bin/$script" 2>/dev/null || echo "$script is not installed"
+done
