@@ -2,23 +2,63 @@
 
 set -eo pipefail
 
-case "$1" in
-  --pipeline|-p)
-    open_pipeline=1
-    shift
-    ;;
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --commit|-c)
+      open_commit=1
+      shift
+      ;;
 
-  --help|-h)
-    echo "Usage: $0 [options] [<remote>]" 1>&2
-    echo 1>&2
-    echo "Options:" 1>&2
-    echo "  --pipeline, -p" 1>&2
-    echo "    if set, tries to open the GitLab pipelines for HEAD" 1>&2
-    exit 1
-    ;;
-esac
+    --pipeline|-p)
+      open_pipeline=1
+      shift
+      ;;
 
-remote="$1"
+    --file|-f)
+      open_file=1
+      path="$2"
+      shift
+      shift
+      ;;
+
+    --remote|-r)
+      remote="$2"
+      shift
+      shift
+      ;;
+
+    --help|-h)
+      echo "Usage: $0 [options]" 1>&2
+      echo 1>&2
+      echo "Options:" 1>&2
+      echo "  --commit, -c" 1>&2
+      echo "    If set, tries to open the commit HEAD is at." 1>&2
+      echo 1>&2
+
+      echo "  --pipeline, -p" 1>&2
+      echo "    If set, tries to open the GitLab pipelines for HEAD." 1>&2
+      echo 1>&2
+
+      echo "  --file <path>, -f <path>" 1>&2
+      echo "    If set, opens the given path for the current branch." 1>&2
+      echo "    If used together with --commit, -c, the given path is opened for the" 1>&2
+      echo "    given commit." 1>&2
+      echo 1>&2
+
+      echo "  --remote <remote>, -r <remote>" 1>&2
+      echo "    The remote to use, defaults to 'origin'." 1>&2
+      echo 1>&2
+
+      exit 1
+      ;;
+
+    *)
+      echo "Error: Unknown argument '$1'"
+      exit 1
+      ;;
+  esac
+done
+
 if [[ ! "$remote" ]]; then
   remote="origin"
 fi
@@ -27,9 +67,20 @@ remote_url=$(git remote get-url "$remote")
 cleaned_url=$(echo "$remote_url" | sed 's/git@//; s/:/\//; s/.git$//')
 url="https://$cleaned_url"
 
-if [[ "$open_pipeline" ]]; then
-  hash=$(git rev-parse HEAD)
-  url="$url/commit/$hash/pipelines"
+rev=$(git rev-parse HEAD)
+
+if [[ "$open_file" ]]; then
+  if [[ ! "$open_commit" ]]; then
+    rev=$(git rev-parse --abbrev-ref HEAD)
+  fi
+
+  obj_type=$(git cat-file -t $rev:$path)
+  url="$url/$obj_type/$rev/$path"
+elif [[ "$open_commit" ]]; then
+  rev=$(git rev-parse HEAD)
+  url="$url/commit/$rev"
+elif [[ "$open_pipeline" ]]; then
+  url="$url/commit/$rev/pipelines"
 fi
 
 open "$url"
