@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-scripts=(git-open-web-ui git-submodule-update-and-commit)
+scripts=(git-open-web-ui git-submodule-update-and-commit git-merge-multiple)
 
 for script in "${scripts[@]}"; do
   ln -s "$(pwd)/$script" "/usr/local/bin/$script" 2>/dev/null ||

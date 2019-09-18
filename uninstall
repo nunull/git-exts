@@ -2,8 +2,7 @@
 
 set -eo pipefail
 
-
-scripts=(git-open-web-ui git-submodule-update-and-commit)
+scripts=(git-open-web-ui git-submodule-update-and-commit git-merge-multiple)
 
 for script in "${scripts[@]}"; do
   rm "/usr/local/bin/$script" 2>/dev/null || echo "$script is not installed"

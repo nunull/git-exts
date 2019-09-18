@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -eo pipefail
+
+usage() {
+  echo "Usage: $0 [options] <pattern>" 1>&2
+  echo 1>&2
+  echo "Options:" 1>&2
+  echo "  --rev, -r" 1>&2
+  echo "    Select branches which point to the given revision." 1>&2
+  echo 1>&2
+  echo "  --force, -f" 1>&2
+  echo "    Force merging" 1>&2
+  echo 1>&2
+
+  exit 1
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --rev|-r)
+      revision="$2"
+      shift
+      shift
+      ;;
+
+    --force|-f)
+      force=1
+      shift
+      ;;
+
+    --help|-h)
+      usage
+      ;;
+
+    *)
+      if [[ "$pattern" ]]; then
+          echo "Error: Unknown argument '$1'"
+          exit 1
+      else
+        pattern="$1"
+        shift
+      fi
+      ;;
+  esac
+done
+
+if [[ ! "$pattern" ]]; then
+  usage
+fi
+
+current_head=$(git rev-parse --abbrev-ref HEAD)
+branches=$(git branch --list "$pattern")
+
+echo "Will merge '$current_head' into"
+echo "$branches"
+echo
+
+if [[ ! "$force" ]]; then
+  echo "Error: Refusing to merge without --force, -f"
+  exit 1
+fi
+
+echo "$branches" | while read -r branch; do
+  echo "Checking out '$branch'..."
+  git checkout "$branch"
+
+  echo "Merging '$current_head' into '$branch'..."
+  git merge "$current_head"
+
+  echo
+done
+
+echo "Done. Checking out original HEAD '$current_head'..."
+git checkout "$current_head"
