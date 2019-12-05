@@ -27,6 +27,11 @@ while [ $# -gt 0 ]; do
       shift
       ;;
 
+    --issue|-i)
+      open_issue=1
+      shift
+      ;;
+
     --help|-h)
       echo "Usage: $0 [options]" 1>&2
       echo 1>&2
@@ -47,6 +52,11 @@ while [ $# -gt 0 ]; do
 
       echo "  --remote <remote>, -r <remote>" 1>&2
       echo "    The remote to use, defaults to 'origin'." 1>&2
+      echo 1>&2
+
+      echo "  --issue, -i" 1>&2
+      echo "    Attempt to open an issue in a bugtracker by using the first word of the commit message of HEAD as an issue ID." 1>&2
+      echo "    Requires GIT_EXTS_BT_URL to be set. Uses the URL by appending the issue ID." 1>&2
       echo 1>&2
 
       exit 1
@@ -81,6 +91,14 @@ elif [[ "$open_commit" ]]; then
   url="$url/commit/$rev"
 elif [[ "$open_pipeline" ]]; then
   url="$url/commit/$rev/pipelines"
+elif [[ "$open_issue" ]]; then
+  if [[ ! "$GIT_EXTS_BT_URL" ]]; then
+    echo "Error: GIT_EXTS_BT_URL not set" 1>&2
+    exit 1
+  fi
+  commit_subject=$(git show --no-patch --format='%s' HEAD)
+  issue_key=$(echo "$commit_subject" | tr -s ' ' -f1)
+  url="$GIT_EXTS_BT_URL/$issue_key"
 fi
 
 open "$url"
